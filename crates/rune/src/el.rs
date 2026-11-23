@@ -154,16 +154,34 @@ pub(crate) type PillSecondaryFn = Rc<dyn Fn(crate::states::States<'_>, &str, Poi
 /// How one [`Mark::Pill`](crate::Mark::Pill) chip looks: any part left unset falls back to
 /// [`El::pill_colors`] and [`El::pill_icon`], then the field's defaults. Build one with
 /// `PillStyle::default().bg(..).icon(..)`.
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct PillStyle {
     pub(crate) bg: Option<Color>,
     pub(crate) fg: Option<Color>,
     pub(crate) icon: Option<&'static crate::Icon>,
+    pub(crate) image: Option<crate::Pixels>,
+    pub(crate) ring: Option<Color>,
+    pub(crate) radius: Option<f32>,
 }
 
 impl PillStyle {
     pub const fn new() -> Self {
-        Self { bg: None, fg: None, icon: None }
+        Self { bg: None, fg: None, icon: None, image: None, ring: None, radius: None }
+    }
+    /// A leading image (a service's logo), drawn as it is in the icon's place.
+    pub fn image(mut self, image: crate::Pixels) -> Self {
+        self.image = Some(image);
+        self
+    }
+    /// A one-point outline around the chip.
+    pub const fn ring(mut self, ring: Color) -> Self {
+        self.ring = Some(ring);
+        self
+    }
+    /// The chip's corner radius in points, capped at half its height (5 by default).
+    pub const fn radius(mut self, points: f32) -> Self {
+        self.radius = Some(points);
+        self
     }
     /// The chip's colour.
     pub const fn bg(mut self, bg: Color) -> Self {

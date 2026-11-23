@@ -110,9 +110,11 @@ pub(crate) fn layout_spans(spans: &[Span]) -> impl Iterator<Item = &Span> {
 
 /// An atomic pill drawn as a chip: byte range `start..end` of the content, and its leading icon.
 /// A `bare` one is an [`InlineIcon`](crate::InlineIcon): no chip, only the icon before the
-/// word it keeps to its line.
+/// word it keeps to its line. `image` draws in the icon's place as it is; `ring` outlines the
+/// chip one point wide; `radius` rounds its corners in points (5 by default, capped at half its
+/// height).
 #[doc(hidden)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct PillChip {
     pub start: u32,
     pub end: u32,
@@ -120,6 +122,9 @@ pub struct PillChip {
     pub bg: Option<Color>,
     pub fg: Option<Color>,
     pub bare: Option<Box<BareIcon>>,
+    pub image: Option<rune_image::pixels::Pixels>,
+    pub ring: Option<Color>,
+    pub radius: Option<f32>,
 }
 
 /// An inline icon's room and look in points (see `InlineIcon`).

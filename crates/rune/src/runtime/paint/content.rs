@@ -466,6 +466,7 @@ impl RuntimeCore {
             let drawn_len = n.elided.map_or(spec.content.len(), |e| e.drawn_len(spec.content.len()));
             self.paint.deco_scratch.clear();
             let mut pill_icons = Vec::new();
+            let mut pill_images = Vec::new();
             let mut bare_all = Vec::new();
             let pill_bg = spec.cold.pill_colors.map_or(spec.rich_style().link.alpha(0.2), |(bg, _)| bg);
             for piece in flow.pieces_in(rows.start, rows.end) {
@@ -473,7 +474,9 @@ impl RuntimeCore {
                 let d_origin = [base_d_origin[0], base_d_origin[1] + piece.y];
                 let (spans_here, pills) = (piece.spans(&spec.spans), piece.pills(&spec.cold.pills));
                 let from = self.paint.deco_scratch.len();
-                crate::text::pill_chips(layout, &pills, spec.style.size, s, d_origin, pill_bg, &mut self.paint.deco_scratch, &mut pill_icons);
+                let mut images = Vec::new();
+                crate::text::pill_chips(layout, &pills, spec.style.size, s, d_origin, pill_bg, &mut self.paint.deco_scratch, &mut pill_icons, &mut images);
+                pill_images.extend(images.into_iter().filter_map(|(k, px, at)| Some((pills[k].image.clone()?, px, at))));
                 // Elided text draws its decorations over the drawn string's offsets.
                 let drawn_spans = n.elided.map(|e| e.spans(&spans_here));
                 let spans = drawn_spans.as_deref().unwrap_or(&spans_here);
@@ -569,6 +572,39 @@ impl RuntimeCore {
                 );
             }
             let mut inline_image_wake: Option<f64> = None;
+            for (pixels, px, at) in pill_images {
+                let at = [
+                    base_rest[0] + (at[0] - base_d_origin[0]) * tk + glide[0],
+                    base_rest[1] + (at[1] - base_d_origin[1]) * tk + glide[1],
+                ];
+                let drawn = px as f32 * tk;
+                let (w, h) = pixels.size();
+                if w == 0 || h == 0 {
+                    continue;
+                }
+                let k = (drawn / w as f32).min(drawn / h as f32);
+                let (w, h) = (w as f32 * k, h as f32 * k);
+                let rect = [at[0] + (drawn - w) * 0.5, at[1] + (drawn - h) * 0.5, w, h];
+                // A chip's image outside its clip or viewport draws nothing and wakes nothing.
+                let visible = shown_x[1] > shown_x[0] && shown[1] > shown[0]
+                    && rect[0] + rect[2] > shown_x[0] && rect[0] < shown_x[1]
+                    && rect[1] + rect[3] > shown[0] && rect[1] < shown[1];
+                if visible && let Some((image, next)) = self.images.place_at(&pixels, [rect[2], rect[3]], Some(now)) {
+                    if let Some(at) = next {
+                        inline_image_wake = Some(inline_image_wake.map_or(at, |prev| prev.min(at)));
+                    }
+                    self.instances.push(Instance {
+                        rect,
+                        radii: [0.0; 4],
+                        fill: [0.0, 0.0, 0.0, o],
+                        border: [0.0; 4],
+                        params: [image.page as f32, KIND_IMAGE, image.premultiplied as u8 as f32, 1.0],
+                        uv: image.rect.map(|v| v as f32),
+                        clip,
+                        fade: crate::render::pack_fade(fade, clip, clip),
+                    });
+                }
+            }
             for (pill, at, px) in bare_all {
                 let Some(b) = pill.bare.as_deref() else { continue };
                 let mut at = [

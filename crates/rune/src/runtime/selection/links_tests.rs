@@ -382,7 +382,7 @@ fn link_fx_decos_scans_each_lines_end_once_and_matches_underline_edges() {
             let start = src.len() as u32;
             src.push_str("p");
             let end = src.len() as u32;
-            pills.push(crate::text::PillChip { start, end, icon: None, bg: None, fg: None, bare: None });
+            pills.push(crate::text::PillChip { start, end, icon: None, bg: None, fg: None, bare: None, ..Default::default() });
             if i + 1 < n {
                 src.push(' ');
             }
@@ -555,7 +555,7 @@ fn link_fx_decos_bg_and_underline_scans_scale_linearly_with_boxes() {
             let ps = src.len() as u32;
             src.push('p');
             let pe = src.len() as u32;
-            pills.push(crate::text::PillChip { start: ps, end: pe, icon: None, bg: None, fg: None, bare: None });
+            pills.push(crate::text::PillChip { start: ps, end: pe, icon: None, bg: None, fg: None, bare: None, ..Default::default() });
             if i + 1 < n {
                 src.push(' ');
             }
@@ -563,7 +563,7 @@ fn link_fx_decos_bg_and_underline_scans_scale_linearly_with_boxes() {
         let layout = ts.layout_blocks(&src, &spans, &[], &pills, TextStyle::new(14.0, 400.0), scale, None, parley::Alignment::Start);
         let mut base_out = Vec::new();
         let mut icons = Vec::new();
-        crate::text::pill_chips(&layout, &pills, 14.0, scale, origin, bg_rest, &mut base_out, &mut icons);
+        crate::text::pill_chips(&layout, &pills, 14.0, scale, origin, bg_rest, &mut base_out, &mut icons, &mut Vec::new());
         ts.decorations_with_rings(&layout, &spans, &rings, 4.0, scale, origin, &mut base_out);
         let fx = LinkFx(vec![(
             0,

@@ -1,0 +1,1 @@
+- Text: `PillStyle` takes `image` (a logo drawn as it is in the icon's place), `ring` (a one-point outline) and `radius` (corner radius in points, capped at half the chip's height), so a field's `@` mention chip can show a service's logo and a round outlined pill. `PillStyle` is no longer `Copy`, since it can hold `Pixels`.

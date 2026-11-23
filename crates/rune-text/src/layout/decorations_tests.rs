@@ -77,7 +77,7 @@ fn strike_decorations_per_box_metrics_when_pill_splits_a_line() {
     let origin = [0.0, 0.0];
     let text = "Big @tag small";
     let spans = [Span::new(0, 3).size(40.0)];
-    let pills = [PillChip { start: 4, end: 8, icon: None, bg: None, fg: None, bare: None }];
+    let pills = [PillChip { start: 4, end: 8, icon: None, bg: None, fg: None, bare: None, ..Default::default() }];
     let layout = ts.layout_blocks(text, &spans, &[], &pills, TextStyle::new(14.0, 400.0), scale, None, Alignment::Start);
     let line = layout.get(0).expect("single line");
     let (big_y, big_h) = expected_strike(&line, 0, origin[1], scale);
@@ -596,7 +596,7 @@ fn strike_decorations_scales_linearly_with_struck_ranges_and_boxes() {
             let ps = src.len() as u32;
             src.push('p');
             let pe = src.len() as u32;
-            pills.push(PillChip { start: ps, end: pe, icon: None, bg: None, fg: None, bare: None });
+            pills.push(PillChip { start: ps, end: pe, icon: None, bg: None, fg: None, bare: None, ..Default::default() });
             if i + 1 < n {
                 src.push(' ');
             }
@@ -654,7 +654,7 @@ fn highlight_decorations_scales_linearly_with_boxes_and_highlights() {
             let ps = src.len() as u32;
             src.push('p');
             let pe = src.len() as u32;
-            pills.push(PillChip { start: ps, end: pe, icon: None, bg: None, fg: None, bare: None });
+            pills.push(PillChip { start: ps, end: pe, icon: None, bg: None, fg: None, bare: None, ..Default::default() });
             if i + 1 < n {
                 src.push(' ');
             }

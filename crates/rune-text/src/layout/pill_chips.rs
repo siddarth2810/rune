@@ -47,7 +47,7 @@ pub fn bare_icons(layout: &Layout<Ink>, pills: &[PillChip], scale: f32, origin: 
 }
 
 /// The chip behind each pill in `layout` (device px, at `origin`), and each leading icon with
-/// its size in px and top-left corner. A pill whose label wraps draws one chip per line, the
+/// its size in px and top-left corner; a leading image goes to `images` with its pill's index. A pill whose label wraps draws one chip per line, the
 /// first to its line's end and the rest from the line's start.
 #[allow(clippy::too_many_arguments)]
 #[doc(hidden)]
@@ -60,6 +60,7 @@ pub fn pill_chips(
     bg: Color,
     out: &mut Vec<PaintedDeco>,
     icons: &mut Vec<(&'static Icon, u32, [f32; 2], Option<Color>)>,
+    images: &mut Vec<(usize, u32, [f32; 2])>,
 ) {
     if pills.is_empty() {
         return;
@@ -116,7 +117,7 @@ pub fn pill_chips(
                 let (top, bot) = ((base - asc - 1.0 * scale).round(), (base + desc + 1.0 * scale).round());
                 let x0 = gr_x0.min(m.inline_min_coord + m.offset);
                 let rect = [(origin[0] + x0).round(), top, (x1 - x0).max(0.0).round(), bot - top];
-                out.push(PaintedDeco::new(Deco { rect, color: pill.bg.unwrap_or(bg), radius: (5.0 * scale).min(rect[3] * 0.5) }, None, 0));
+                out.push(chip(pill, rect, bg, scale));
                 continue;
             };
             let rtl_lead = gr_x0 <= gr_x1 && (lead.x - gr_x1).abs() < 1.0;
@@ -149,12 +150,21 @@ pub fn pill_chips(
             let top = (base - asc - 1.0 * scale).round();
             let bot = (base + desc + 1.0 * scale).round();
             let rect = [(origin[0] + x0).round(), top, (x1 - x0).max(0.0).round(), bot - top];
-            out.push(PaintedDeco::new(Deco { rect, color: pill.bg.unwrap_or(bg), radius: (5.0 * scale).min(rect[3] * 0.5) }, None, 0));
-            if let Some(icon) = pill.icon {
-                let px = (pm.icon * scale).round().max(1.0);
-                let ix = if rtl_lead { rect[0] + rect[2] - pm.pad * scale - px } else { rect[0] + pm.pad * scale };
-                icons.push((icon, px as u32, [ix.round(), ((top + bot - px) * 0.5).round()], pill.fg));
+            out.push(chip(pill, rect, bg, scale));
+            let px = (pm.icon * scale).round().max(1.0);
+            let ix = if rtl_lead { rect[0] + rect[2] - pm.pad * scale - px } else { rect[0] + pm.pad * scale };
+            let at = [ix.round(), ((top + bot - px) * 0.5).round()];
+            if pill.image.is_some() {
+                images.push((i, px as u32, at));
+            } else if let Some(icon) = pill.icon {
+                icons.push((icon, px as u32, at, pill.fg));
             }
         }
     }
+}
+
+/// A pill's chip over `rect`: its fill, corners and outline.
+fn chip(pill: &PillChip, rect: [f32; 4], bg: Color, scale: f32) -> PaintedDeco {
+    let radius = (pill.radius.unwrap_or(5.0) * scale).min(rect[3] * 0.5);
+    PaintedDeco::new(Deco { rect, color: pill.bg.unwrap_or(bg), radius }, pill.ring.map(|c| (c, scale)), 0)
 }
